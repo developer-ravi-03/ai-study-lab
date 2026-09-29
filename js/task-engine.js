@@ -1,52 +1,346 @@
-const configs={
-2:{title:"AI Notes Generator",label:"Study material",placeholder:"Enter a topic, chapter, or paste study material...",button:"Generate Notes",prompt:v=>`Create clear exam-ready study notes from the following material. Return concise headings, definitions, key points, examples and a short recap. Use Markdown. Material:\n${v}`},
-3:{title:"AI Presentation Generator",label:"Presentation topic",placeholder:"e.g. Internet of Things in Smart Healthcare",button:"Generate Slides",prompt:v=>`Create a 6-slide classroom presentation on the topic below. Return JSON only as {"slides":[{"title":"...","points":["...","...","..."]}]}. Keep points concise and student-friendly. Topic:\n${v}`},
-4:{title:"AI Mind Map",label:"Syllabus / topic",placeholder:"Paste your syllabus or topic hierarchy...",button:"Generate Mind Map",prompt:v=>`Create a hierarchical mind map for this syllabus. Return JSON only as {"title":"...","branches":[{"name":"...","children":["...","..."]}]}. Syllabus:\n${v}`},
-6:{title:"AI Quiz Generator",label:"Quiz topic",placeholder:"e.g. JavaScript closures, DBMS normalization...",button:"Generate Quiz",prompt:v=>`Create 8 multiple-choice questions for the topic. Return JSON only as {"questions":[{"question":"...","options":["A","B","C","D"],"answer":0,"explanation":"..."}]}. Topic:\n${v}`},
-8:{title:"AI Flashcard Generator",label:"Revision topic",placeholder:"Enter a topic or study text...",button:"Generate Cards",prompt:v=>`Create 10 revision flashcards. Return JSON only as {"cards":[{"front":"question or term","back":"clear answer"}]}. Topic:\n${v}`},
-9:{title:"AI Study Planner",label:"Study requirements",placeholder:"Subjects, hours available per day, exam/target dates...",button:"Build Plan",prompt:v=>`Create a practical day-wise study plan from these requirements. Return JSON only as {"summary":"...","days":[{"day":"Day 1","tasks":[{"subject":"...","duration":"...","task":"..."}]}]}. Requirements:\n${v}`}
+const configs = {
+  2: {
+    button: "Generate Notes",
+    prompt: v => `Create polished, exam-ready study notes from this material. Use Markdown headings, short bullet points, definitions, examples, and a concise recap. Do not use decorative symbols or Markdown tables. Keep the content accurate to the supplied topic. Material:\n${v}`
+  },
+  3: {
+    button: "Generate Slides",
+    prompt: v => `Create exactly 6 classroom presentation slides. Return JSON only: {"slides":[{"title":"...","points":["...","...","..."]}]}. Keep titles concise and points presentation-ready. Topic:\n${v}`
+  },
+  4: {
+    button: "Generate Mind Map",
+    prompt: v => `Create a concise hierarchical mind map. Return JSON only: {"title":"...","branches":[{"name":"...","children":["...","..."]}]}. Topic:\n${v}`
+  },
+  6: {
+    button: "Generate Quiz",
+    prompt: v => `Create 8 multiple-choice questions. Return JSON only: {"questions":[{"question":"...","options":["A","B","C","D"],"answer":0,"explanation":"..."}]}. Answer is a zero-based option index. Topic:\n${v}`
+  },
+  8: {
+    button: "Generate Cards",
+    prompt: v => `Create 10 useful revision flashcards. Return JSON only: {"cards":[{"front":"...","back":"..."}]}. Topic:\n${v}`
+  },
+  9: {
+    button: "Build Plan",
+    prompt: v => `Create a practical day-wise study plan. Return JSON only: {"summary":"...","days":[{"day":"Day 1","tasks":[{"subject":"...","duration":"...","task":"..."}]}]}. Requirements:\n${v}`
+  }
 };
-const esc=AIStudyLab.escapeHtml;
-function prettyMarkdown(s){
- const lines=String(s).split(/\r?\n/),html=[]; let list=false;
- const close=()=>{if(list){html.push("</ul>");list=false}};
- for(const raw of lines){const line=raw.trim();if(!line){close();continue}
-  if(/^#{1,4}\s/.test(line)){close();const level=Math.min(4,line.match(/^#+/)[0].length);html.push("<h"+level+">"+esc(line.replace(/^#{1,4}\s+/,""))+"</h"+level+">");continue}
-  if(/^[-*]\s+/.test(line)){if(!list){html.push("<ul>");list=true}html.push("<li>"+esc(line.replace(/^[-*]\s+/,""))+"</li>");continue}
-  close();html.push("<p>"+esc(line).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")+"</p>");
- }
- close(); return html.join("");
+
+const esc = AIStudyLab.escapeHtml;
+let currentSlides = [];
+let slideIndex = 0;
+let quizScore = 0;
+let quizTotal = 0;
+
+function setStatus(el, text) {
+  if (!el) return;
+  el.textContent = text;
+  const state = /WORKING|GENERATING/i.test(text) ? "working" : /ERROR|FAILED/i.test(text) ? "error" : "ready";
+  el.dataset.state = state;
 }
-let currentSlides=[],slideIndex=0,quizScore=0,quizTotal=0;
-function renderJson(id,data){
- if(id===3){currentSlides=data.slides||[];slideIndex=0;return '<div id="slideStage"></div><div class="actions"><button class="quiet" id="prevSlide">← Previous</button><button class="quiet" id="nextSlide">Next →</button><button class="quiet" id="printSlides">Print Slides</button></div>'}
- if(id===4)return `<div class="mindmap"><h3>${esc(data.title||"Mind Map")}</h3>${(data.branches||[]).map(b=>`<section><strong>${esc(b.name)}</strong><ul>${(b.children||[]).map(x=>"<li>"+esc(x)+"</li>").join("")}</ul></section>`).join("")}</div>`;
- if(id===6){quizScore=0;quizTotal=(data.questions||[]).length;return '<div id="quizScore">Score: 0 / '+quizTotal+'</div>'+(data.questions||[]).map((q,i)=>`<article class="quiz-q" data-answer="${Number(q.answer)||0}"><strong>${i+1}. ${esc(q.question)}</strong><div>${(q.options||[]).map((o,j)=>`<button type="button" data-choice="${j}">${esc(o)}</button>`).join("")}</div><p class="quiz-feedback"></p><small>${esc(q.explanation||"")}</small></article>`).join("")}
- if(id===8)return `<div class="flash-grid">${(data.cards||[]).map(c=>`<button type="button" class="flashcard"><span>${esc(c.front)}</span><span class="backface">${esc(c.back)}</span></button>`).join("")}</div>`;
- if(id===9)return `<p>${esc(data.summary||"")}</p>${(data.days||[]).map(d=>`<article class="plan-day"><h3>${esc(d.day)}</h3>${(d.tasks||[]).map(t=>`<p><strong>${esc(t.subject)}</strong> · ${esc(t.duration)} — ${esc(t.task)}</p>`).join("")}</article>`).join("")}`;
- return "<pre>"+esc(JSON.stringify(data,null,2))+"</pre>";
+
+function cleanJson(raw) {
+  return String(raw).replace(/^\`\`\`json\s*/i, "").replace(/^\`\`\`\s*/, "").replace(/\s*\`\`\`$/, "").trim();
 }
-function drawSlide(){const stage=document.querySelector("#slideStage"),s=currentSlides[slideIndex];if(!stage)return;if(!s){stage.innerHTML="<p>No slides were returned.</p>";return}stage.innerHTML=`<article class="result-card slide-card"><small>SLIDE ${slideIndex+1} / ${currentSlides.length}</small><h3>${esc(s.title||"")}</h3><ul>${(s.points||[]).map(p=>"<li>"+esc(p)+"</li>").join("")}</ul></article>`}
-document.addEventListener("DOMContentLoaded",()=>{
- const id=Number(document.body.dataset.task); const cfg=configs[id]; if(!cfg)return;
- const input=document.querySelector("#taskInput"),run=document.querySelector("#runTask"),clear=document.querySelector("#clearTask"),out=document.querySelector("#output"),status=document.querySelector("#outputStatus");
- run.onclick=async()=>{const v=input.value.trim();if(!v){status.textContent="INPUT NEEDED";out.innerHTML="<div class='mark'>!</div><p>Please enter some content first.</p>";return}run.disabled=true;run.textContent="Generating…";status.textContent="WORKING";out.innerHTML="<div class='mark'>✦</div><p>Gemini is preparing your result.</p><small>Please wait…</small>";try{const raw=await AIStudyLab.generate(cfg.prompt(v),{json:[3,4,6,8,9].includes(id)});const data=[3,4,6,8,9].includes(id)?JSON.parse(raw.replace(/^```json|^```|\`\`\`$/g,"").trim()):null;out.innerHTML=data?renderJson(id,data):"<div class='rich-text'>"+prettyMarkdown(raw)+"</div>";status.textContent="READY";if(id===2){let dl=document.querySelector("#downloadNotes");if(!dl){dl=document.createElement("button");dl.id="downloadNotes";dl.type="button";dl.className="quiet";dl.textContent="Download PDF";document.querySelector(".actions")?.appendChild(dl)}dl.onclick=()=>{if(!window.jspdf?.jsPDF){alert("PDF export is still loading. Please try again.");return}
- const doc=new window.jspdf.jsPDF({unit:"mm",format:"a4"});
- const margin=16,maxWidth=178,lineHeight=6;let y=18;
- const clean=t=>String(t).replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1").replace(/\`([^\`]*)\`/g,"$1").replace(/^\s*[-*]\s+/,"").trim();
- const add=(text,size=11,bold=false)=>{doc.setFont("helvetica",bold?"bold":"normal");doc.setFontSize(size);for(const line of doc.splitTextToSize(clean(text),maxWidth)){if(y>280){doc.addPage();y=18}doc.text(line,margin,y);y+=lineHeight}};
- const lines=String(raw).replace(/\r/g,"").split("\n");
- for(const line of lines){
-  const t=line.trim();
-  if(!t){y+=3;continue}
-  if(/^\|/.test(t)){const cells=t.split("|").map(x=>clean(x)).filter(Boolean);if(cells.every(x=>/^[-:]+$/.test(x)))continue;add(cells.join("    |    "),10,false);continue}
-  if(/^#{1}\s+/.test(t))add(t.replace(/^#\s+/,""),18,true);
-  else if(/^#{2}\s+/.test(t))add(t.replace(/^##\s+/,""),15,true);
-  else if(/^#{3}\s+/.test(t))add(t.replace(/^###\s+/,""),13,true);
-  else if(/^[-*]\s+/.test(t))add("• "+t.replace(/^[-*]\s+/,""),11,false);
-  else add(t,11,false);
- }
- doc.save("AI-StudyLab-Notes.pdf")}if(id===3){drawSlide();document.querySelector("#prevSlide").onclick=()=>{if(slideIndex>0){slideIndex--;drawSlide()}};document.querySelector("#nextSlide").onclick=()=>{if(slideIndex<currentSlides.length-1){slideIndex++;drawSlide()}};document.querySelector("#printSlides").onclick=()=>window.print()}}catch(e){status.textContent="ERROR";out.innerHTML="<div class='mark'>!</div><p>"+esc(e.message)+"</p><small>Open AI Settings and check your Gemini key.</small>"}finally{run.disabled=false;run.textContent=cfg.button+" →"}};
- clear.onclick=()=>{input.value="";status.textContent="WAITING";out.classList.add("is-empty");out.classList.add("is-empty");out.innerHTML="<div class='mark'>✦</div><p>Your generated result will appear here.</p><small>Enter content and use the action above.</small>"};
- document.addEventListener("click",e=>{if(e.target.matches(".flashcard"))e.target.classList.toggle("flipped");if(e.target.matches(".quiz-q button")){const q=e.target.closest(".quiz-q");if(q.dataset.done==="1")return;const ok=Number(e.target.dataset.choice)===Number(q.dataset.answer);q.dataset.done="1";if(ok)quizScore++;q.querySelector(".quiz-feedback").textContent=ok?"Correct ✓":"Incorrect";q.querySelector(".quiz-feedback").className="quiz-feedback "+(ok?"correct":"wrong");const score=document.querySelector("#quizScore");if(score)score.textContent="Score: "+quizScore+" / "+quizTotal}})
+
+function prettyMarkdown(text) {
+  const lines = String(text).split(/\r?\n/);
+  const html = [];
+  let inList = false;
+
+  const closeList = () => {
+    if (inList) {
+      html.push("</ul>");
+      inList = false;
+    }
+  };
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) {
+      closeList();
+      continue;
+    }
+
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      closeList();
+      const level = heading[1].length;
+      html.push(`<h${level}>${esc(heading[2])}</h${level}>`);
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(line)) {
+      if (!inList) {
+        html.push("<ul>");
+        inList = true;
+      }
+      html.push(`<li>${esc(line.replace(/^[-*]\s+/, ""))}</li>`);
+      continue;
+    }
+
+    closeList();
+    html.push(`<p>${esc(line).replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</p>`);
+  }
+
+  closeList();
+  return html.join("");
+}
+
+function renderJson(id, data) {
+  if (id === 3) {
+    currentSlides = Array.isArray(data.slides) ? data.slides : [];
+    slideIndex = 0;
+    return `
+      <div id="slideStage"></div>
+      <div class="actions result-actions">
+        <button class="quiet" id="prevSlide" type="button">← Previous</button>
+        <button class="quiet" id="nextSlide" type="button">Next →</button>
+        <button class="quiet" id="printSlides" type="button">Print Slides</button>
+      </div>`;
+  }
+
+  if (id === 4) {
+    return `
+      <div class="mindmap">
+        <div class="mindmap-title">${esc(data.title || "Mind Map")}</div>
+        ${(data.branches || []).map(branch => `
+          <section>
+            <h3>${esc(branch.name || "")}</h3>
+            <ul>${(branch.children || []).map(child => `<li>${esc(typeof child === "string" ? child : JSON.stringify(child))}</li>`).join("")}</ul>
+          </section>`).join("")}
+      </div>`;
+  }
+
+  if (id === 6) {
+    quizScore = 0;
+    quizTotal = Array.isArray(data.questions) ? data.questions.length : 0;
+    return `
+      <div class="quiz-summary" id="quizScore">Score <strong>0 / ${quizTotal}</strong></div>
+      ${(data.questions || []).map((q, index) => `
+        <article class="quiz-q" data-answer="${Number(q.answer) || 0}">
+          <div class="quiz-number">QUESTION ${String(index + 1).padStart(2, "0")}</div>
+          <h3>${esc(q.question || "")}</h3>
+          <div class="quiz-options">
+            ${(q.options || []).map((option, choice) => `<button type="button" data-choice="${choice}">${esc(option)}</button>`).join("")}
+          </div>
+          <p class="quiz-feedback"></p>
+          <small class="quiz-explanation">${esc(q.explanation || "")}</small>
+        </article>`).join("")}`;
+  }
+
+  if (id === 8) {
+    return `
+      <div class="flash-grid">
+        ${(data.cards || []).map((card, index) => `
+          <button type="button" class="flashcard">
+            <span class="flash-index">CARD ${String(index + 1).padStart(2, "0")}</span>
+            <strong>${esc(card.front || "")}</strong>
+            <span class="backface">${esc(card.back || "")}</span>
+            <span class="flash-hint">Click to reveal answer</span>
+          </button>`).join("")}
+      </div>`;
+  }
+
+  if (id === 9) {
+    return `
+      <div class="planner-summary">${esc(data.summary || "Personalized study plan")}</div>
+      ${(data.days || []).map(day => `
+        <article class="plan-day">
+          <h3>${esc(day.day || "Study day")}</h3>
+          ${(day.tasks || []).map(task => `
+            <div class="plan-task">
+              <strong>${esc(task.subject || "")}</strong>
+              <span>${esc(task.duration || "")}</span>
+              <p>${esc(task.task || "")}</p>
+            </div>`).join("")}
+        </article>`).join("")}`;
+  }
+
+  return `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+function drawSlide() {
+  const stage = document.querySelector("#slideStage");
+  if (!stage) return;
+  const slide = currentSlides[slideIndex];
+
+  if (!slide) {
+    stage.innerHTML = '<div class="empty-state">No slides were returned.</div>';
+    return;
+  }
+
+  stage.innerHTML = `
+    <article class="result-card slide-card">
+      <div class="slide-label">SLIDE ${slideIndex + 1} / ${currentSlides.length}</div>
+      <h3>${esc(slide.title || "")}</h3>
+      <ul>${(slide.points || []).map(point => `<li>${esc(point)}</li>`).join("")}</ul>
+    </article>`;
+}
+
+function addNotesPdf(raw) {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert("PDF export is still loading. Please try again.");
+    return;
+  }
+
+  const doc = new window.jspdf.jsPDF({ unit: "mm", format: "a4" });
+  const margin = 16;
+  const maxWidth = 178;
+  const lineHeight = 6;
+  let y = 18;
+
+  const clean = value => String(value)
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/\*(.*?)\*/g, "$1")
+    .replace(/\`([^\`]*)\`/g, "$1")
+    .trim();
+
+  const addText = (value, size = 11, bold = false) => {
+    doc.setFont("helvetica", bold ? "bold" : "normal");
+    doc.setFontSize(size);
+
+    for (const line of doc.splitTextToSize(clean(value), maxWidth)) {
+      if (y > 280) {
+        doc.addPage();
+        y = 18;
+      }
+      doc.text(line, margin, y);
+      y += lineHeight;
+    }
+  };
+
+  for (const rawLine of String(raw).replace(/\r/g, "").split("\n")) {
+    const line = rawLine.trim();
+
+    if (!line) {
+      y += 3;
+      continue;
+    }
+
+    if (/^#{1}\s+/.test(line)) addText(line.replace(/^#\s+/, ""), 18, true);
+    else if (/^#{2}\s+/.test(line)) addText(line.replace(/^##\s+/, ""), 15, true);
+    else if (/^#{3}\s+/.test(line)) addText(line.replace(/^###\s+/, ""), 13, true);
+    else if (/^[-*]\s+/.test(line)) addText("• " + line.replace(/^[-*]\s+/, ""));
+    else if (/^\|/.test(line)) {
+      const cells = line.split("|").map(clean).filter(Boolean);
+      if (!cells.every(cell => /^[-:]+$/.test(cell))) addText(cells.join("   |   "), 10);
+    } else {
+      addText(line);
+    }
+  }
+
+  doc.save("AI-StudyLab-Notes.pdf");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const id = Number(document.body.dataset.task);
+  const cfg = configs[id];
+  if (!cfg) return;
+
+  const input = document.querySelector("#taskInput");
+  const run = document.querySelector("#runTask");
+  const clear = document.querySelector("#clearTask");
+  const output = document.querySelector("#output");
+  const status = document.querySelector("#outputStatus");
+
+  if (!input || !run || !output) return;
+
+  setStatus(status, "WAITING");
+
+  run.addEventListener("click", async () => {
+    const value = input.value.trim();
+
+    if (!value) {
+      setStatus(status, "INPUT NEEDED");
+      output.classList.add("is-empty");
+      output.innerHTML = '<div class="empty-state"><strong>Nothing to generate yet.</strong><span>Enter a topic or study material first.</span></div>';
+      return;
+    }
+
+    run.disabled = true;
+    run.textContent = "Generating…";
+    setStatus(status, "WORKING");
+    output.classList.remove("is-empty");
+    output.innerHTML = '<div class="empty-state"><strong>Preparing your result</strong><span>Gemini is working on it…</span></div>';
+
+    try {
+      const structured = [3, 4, 6, 8, 9].includes(id);
+      const raw = await AIStudyLab.generate(cfg.prompt(value), { json: structured });
+      const data = structured ? JSON.parse(cleanJson(raw)) : null;
+
+      output.innerHTML = data ? renderJson(id, data) : `<div class="rich-text">${prettyMarkdown(raw)}</div>`;
+      output.classList.remove("is-empty");
+      setStatus(status, "READY");
+
+      if (id === 2) {
+        let download = document.querySelector("#downloadNotes");
+        if (!download) {
+          download = document.createElement("button");
+          download.id = "downloadNotes";
+          download.type = "button";
+          download.className = "quiet";
+          download.textContent = "Download PDF";
+          document.querySelector(".actions")?.appendChild(download);
+        }
+        download.onclick = () => addNotesPdf(raw);
+      }
+
+      if (id === 3) {
+        drawSlide();
+        document.querySelector("#prevSlide").onclick = () => {
+          if (slideIndex > 0) {
+            slideIndex--;
+            drawSlide();
+          }
+        };
+        document.querySelector("#nextSlide").onclick = () => {
+          if (slideIndex < currentSlides.length - 1) {
+            slideIndex++;
+            drawSlide();
+          }
+        };
+        document.querySelector("#printSlides").onclick = () => window.print();
+      }
+    } catch (error) {
+      setStatus(status, "ERROR");
+      output.classList.add("is-empty");
+      output.innerHTML = `<div class="empty-state error-state"><strong>Generation failed</strong><span>${esc(error.message)}</span></div>`;
+    } finally {
+      run.disabled = false;
+      run.textContent = cfg.button + " →";
+    }
+  });
+
+  if (clear) {
+    clear.addEventListener("click", () => {
+      input.value = "";
+      setStatus(status, "WAITING");
+      output.classList.add("is-empty");
+      output.innerHTML = '<div class="empty-state"><strong>Your result will appear here.</strong><span>Enter content and use the action above.</span></div>';
+    });
+  }
+
+  document.addEventListener("click", event => {
+    const flash = event.target.closest(".flashcard");
+    if (flash) flash.classList.toggle("flipped");
+
+    const quizButton = event.target.closest(".quiz-q button");
+    if (!quizButton) return;
+
+    const question = quizButton.closest(".quiz-q");
+    if (!question || question.dataset.done === "1") return;
+
+    const correct = Number(quizButton.dataset.choice) === Number(question.dataset.answer);
+    question.dataset.done = "1";
+    question.querySelectorAll("button").forEach(button => button.disabled = true);
+    quizButton.classList.add("selected");
+
+    if (correct) quizScore++;
+    const feedback = question.querySelector(".quiz-feedback");
+    feedback.textContent = correct ? "Correct" : "Incorrect";
+    feedback.className = "quiz-feedback " + (correct ? "correct" : "wrong");
+
+    const score = document.querySelector("#quizScore");
+    if (score) score.innerHTML = `Score <strong>${quizScore} / ${quizTotal}</strong>`;
+  });
 });
