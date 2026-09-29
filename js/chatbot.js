@@ -23,6 +23,15 @@ const setStatus = (text, state) => {
   status.dataset.state = state || "ready";
 };
 
+const addTyping = () => {
+  const row = document.createElement("div");
+  row.className = "typing-row";
+  row.innerHTML = '<span></span><span></span><span></span><em>AI is typing</em>';
+  chat.appendChild(row);
+  chat.scrollTop = chat.scrollHeight;
+  return row;
+};
+
 form.onsubmit = async e => {
   e.preventDefault();
   const q = input.value.trim();
@@ -34,8 +43,7 @@ form.onsubmit = async e => {
   form.querySelector("button").disabled = true;
   setStatus("THINKING", "working");
 
-  const typing = document.createElement("div"); typing.className = "typing-row"; typing.innerHTML = '<span></span><span></span><span></span><em>AI is typing</em>'; chat.appendChild(typing); chat.scrollTop = chat.scrollHeight;
-  thinking.classList.add("thinking");
+  const typing = addTyping();
 
   try {
     const context = history.slice(-8).map(x => `${x.role}: ${x.text}`).join("\n");
@@ -43,15 +51,16 @@ form.onsubmit = async e => {
       "You are a patient academic subject tutor. Answer at student level. " +
       "Explain concepts clearly, use short sections and examples when useful. " +
       "Do not invent facts. If the question is ambiguous, ask one concise clarification. " +
-      "Recent conversation:\n" + context + "\n\nStudent question:\n" + q
+      "Recent conversation:\n" + context + "\n\nStudent question:\n" + q,
+      {loading:false}
     );
 
     history.push({role:"user", text:q}, {role:"assistant", text:answer});
-    thinking.remove();
+    typing.remove();
     addMessage("ai", answer);
     setStatus("READY", "ready");
   } catch (err) {
-    thinking.remove();
+    typing.remove();
     addMessage("ai", err.message);
     setStatus("ERROR", "error");
   } finally {
@@ -63,7 +72,7 @@ form.onsubmit = async e => {
 
 document.querySelector("#clearChat").onclick = () => {
   history = [];
-  chat.innerHTML = `<div class="msg ai"><div class="msg-role">AI TUTOR</div><div>Hello! Tell me the subject and your doubt. I can explain concepts step by step and answer follow-up questions using the conversation context.</div></div>`;
+  chat.innerHTML = '<div class="msg ai"><div class="msg-role">AI TUTOR</div><div>Hello! Tell me the subject and your doubt. I can explain concepts step by step and answer follow-up questions using the conversation context.</div></div>';
   setStatus("READY", "ready");
   input.focus();
 };
