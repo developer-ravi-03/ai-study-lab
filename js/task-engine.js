@@ -7,7 +7,16 @@ const configs={
 9:{title:"AI Study Planner",label:"Study requirements",placeholder:"Subjects, hours available per day, exam/target dates...",button:"Build Plan",prompt:v=>`Create a practical day-wise study plan from these requirements. Return JSON only as {"summary":"...","days":[{"day":"Day 1","tasks":[{"subject":"...","duration":"...","task":"..."}]}]}. Requirements:\n${v}`}
 };
 const esc=AIStudyLab.escapeHtml;
-function prettyMarkdown(s){return esc(s).replace(/^### (.*)$/gm,"<h4>$1</h4>").replace(/^## (.*)$/gm,"<h3>$1</h3>").replace(/^# (.*)$/gm,"<h2>$1</h2>").replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>")}
+function prettyMarkdown(s){
+ const lines=String(s).split(/\r?\n/),html=[]; let list=false;
+ const close=()=>{if(list){html.push("</ul>");list=false}};
+ for(const raw of lines){const line=raw.trim();if(!line){close();continue}
+  if(/^#{1,4}\s/.test(line)){close();const level=Math.min(4,line.match(/^#+/)[0].length);html.push("<h"+level+">"+esc(line.replace(/^#{1,4}\s+/,""))+"</h"+level+">");continue}
+  if(/^[-*]\s+/.test(line)){if(!list){html.push("<ul>");list=true}html.push("<li>"+esc(line.replace(/^[-*]\s+/,""))+"</li>");continue}
+  close();html.push("<p>"+esc(line).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")+"</p>");
+ }
+ close(); return html.join("");
+}
 let currentSlides=[],slideIndex=0,quizScore=0,quizTotal=0;
 function renderJson(id,data){
  if(id===3){currentSlides=data.slides||[];slideIndex=0;return '<div id="slideStage"></div><div class="actions"><button class="quiet" id="prevSlide">← Previous</button><button class="quiet" id="nextSlide">Next →</button><button class="quiet" id="printSlides">Print Slides</button></div>'}
@@ -17,11 +26,11 @@ function renderJson(id,data){
  if(id===9)return `<p>${esc(data.summary||"")}</p>${(data.days||[]).map(d=>`<article class="plan-day"><h3>${esc(d.day)}</h3>${(d.tasks||[]).map(t=>`<p><strong>${esc(t.subject)}</strong> · ${esc(t.duration)} — ${esc(t.task)}</p>`).join("")}</article>`).join("")}`;
  return "<pre>"+esc(JSON.stringify(data,null,2))+"</pre>";
 }
-function drawSlide(){const stage=document.querySelector("#slideStage"),s=currentSlides[slideIndex];if(!stage||!s)return;stage.innerHTML=`<article class="result-card slide-card"><small>SLIDE ${slideIndex+1} / ${currentSlides.length}</small><h3>${esc(s.title)}</h3><ul>${(s.points||[]).map(p=>"<li>"+esc(p)+"</li>").join("")}</ul></article>`}
+function drawSlide(){const stage=document.querySelector("#slideStage"),s=currentSlides[slideIndex];if(!stage)return;if(!s){stage.innerHTML="<p>No slides were returned.</p>";return}stage.innerHTML=`<article class="result-card slide-card"><small>SLIDE ${slideIndex+1} / ${currentSlides.length}</small><h3>${esc(s.title||"")}</h3><ul>${(s.points||[]).map(p=>"<li>"+esc(p)+"</li>").join("")}</ul></article>`}
 document.addEventListener("DOMContentLoaded",()=>{
  const id=Number(document.body.dataset.task); const cfg=configs[id]; if(!cfg)return;
  const input=document.querySelector("#taskInput"),run=document.querySelector("#runTask"),clear=document.querySelector("#clearTask"),out=document.querySelector("#output"),status=document.querySelector("#outputStatus");
- run.onclick=async()=>{const v=input.value.trim();if(!v){status.textContent="INPUT NEEDED";out.innerHTML="<div class='mark'>!</div><p>Please enter some content first.</p>";return}run.disabled=true;run.textContent="Generating…";status.textContent="WORKING";out.innerHTML="<div class='mark'>✦</div><p>Gemini is preparing your result.</p><small>Please wait…</small>";try{const raw=await AIStudyLab.generate(cfg.prompt(v),{json:[3,4,6,8,9].includes(id)});const data=[3,4,6,8,9].includes(id)?JSON.parse(raw.replace(/^```json|^```|\`\`\`$/g,"").trim()):null;out.innerHTML=data?renderJson(id,data):"<div class='rich-text'>"+prettyMarkdown(raw)+"</div>";status.textContent="READY"}catch(e){status.textContent="ERROR";out.innerHTML="<div class='mark'>!</div><p>"+esc(e.message)+"</p><small>Open AI Settings and check your Gemini key.</small>"}finally{run.disabled=false;run.textContent=cfg.button+" →"}};
- clear.onclick=()=>{input.value="";status.textContent="WAITING";out.innerHTML="<div class='mark'>✦</div><p>Your generated result will appear here.</p><small>Enter content and use the action above.</small>"};
+ run.onclick=async()=>{const v=input.value.trim();if(!v){status.textContent="INPUT NEEDED";out.innerHTML="<div class='mark'>!</div><p>Please enter some content first.</p>";return}run.disabled=true;run.textContent="Generating…";status.textContent="WORKING";out.innerHTML="<div class='mark'>✦</div><p>Gemini is preparing your result.</p><small>Please wait…</small>";try{const raw=await AIStudyLab.generate(cfg.prompt(v),{json:[3,4,6,8,9].includes(id)});const data=[3,4,6,8,9].includes(id)?JSON.parse(raw.replace(/^```json|^```|\`\`\`$/g,"").trim()):null;out.innerHTML=data?renderJson(id,data):"<div class='rich-text'>"+prettyMarkdown(raw)+"</div>";status.textContent="READY";if(id===3){drawSlide();document.querySelector("#prevSlide").onclick=()=>{if(slideIndex>0){slideIndex--;drawSlide()}};document.querySelector("#nextSlide").onclick=()=>{if(slideIndex<currentSlides.length-1){slideIndex++;drawSlide()}};document.querySelector("#printSlides").onclick=()=>window.print()}}catch(e){status.textContent="ERROR";out.innerHTML="<div class='mark'>!</div><p>"+esc(e.message)+"</p><small>Open AI Settings and check your Gemini key.</small>"}finally{run.disabled=false;run.textContent=cfg.button+" →"}};
+ clear.onclick=()=>{input.value="";status.textContent="WAITING";out.classList.add("is-empty");out.classList.add("is-empty");out.innerHTML="<div class='mark'>✦</div><p>Your generated result will appear here.</p><small>Enter content and use the action above.</small>"};
  document.addEventListener("click",e=>{if(e.target.matches(".flashcard"))e.target.classList.toggle("flipped");if(e.target.matches(".quiz-q button")){const q=e.target.closest(".quiz-q");if(q.dataset.done==="1")return;const ok=Number(e.target.dataset.choice)===Number(q.dataset.answer);q.dataset.done="1";if(ok)quizScore++;q.querySelector(".quiz-feedback").textContent=ok?"Correct ✓":"Incorrect";q.querySelector(".quiz-feedback").className="quiz-feedback "+(ok?"correct":"wrong");const score=document.querySelector("#quizScore");if(score)score.textContent="Score: "+quizScore+" / "+quizTotal}})
 });
