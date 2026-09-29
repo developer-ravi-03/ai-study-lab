@@ -1,4 +1,4 @@
-const GEMINI_MODELS=["gemini-3.5-flash-lite","gemini-3.5-flash"];
+const GEMINI_MODELS=["gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-2.5-flash-lite"];
 const GEMINI_BASE="https://generativelanguage.googleapis.com/v1beta/models/";
 window.AIStudyLab=window.AIStudyLab||{};
 AIStudyLab.getApiKey=()=>sessionStorage.getItem("gemini_api_key")||"";
@@ -15,44 +15,49 @@ AIStudyLab.generate=async(prompt,{json=false}={})=>{
  if(json) body.generationConfig.responseMimeType="application/json";
  AIStudyLab.setLoading(true);
  try{
-  let lastError;
+  let lastError=null;
   for(const model of GEMINI_MODELS){
-   let attemptedRetry=false;
+   let retried=false;
    while(true){
     try{
      const res=await fetch(GEMINI_BASE+model+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify(body)});
      const data=await res.json();
-     if(res.ok)return data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
+     if(res.ok){
+      const text=data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
+      if(text)return text;
+      throw new Error("Gemini returned an empty response.");
+     }
 
      const status=res.status;
      let message=data?.error?.message||"";
      if(status===429){
-      throw new Error("Gemini rate limit reached on the Free Tier. Please wait a little and try again.");
+      throw new Error("Gemini rate limit reached. Please wait a little and try again.");
      }
-     if(status===503){
-      message="Gemini is temporarily busy. Please wait a moment and try again.";
-     }else if(status===500||status===502||status===504){
-      message="Gemini is temporarily unavailable. Please try again in a moment.";
-     }else if(status===404){
-      message="This Gemini model is unavailable for the current API project.";
-     }else if(!message){
-      message="Gemini request failed ("+status+").";
+     if(status===401||status===403){
+      throw new Error("Gemini API key is invalid or not authorized for this project.");
      }
-
-     lastError=new Error(message);
-     if((status===503||status===500||status===502||status===504)&&!attemptedRetry){
-      attemptedRetry=true;
-      await AIStudyLab.sleep(1500);
-      continue;
+     if(status===400){
+      throw new Error(message||"Gemini rejected the request. Please try again.");
      }
-     if(status===404){
+     const transient=status===408||status===500||status===502||status===503||status===504;
+     if(transient){
+      lastError=new Error(status===503?"Gemini is temporarily busy. Trying another available Free Tier model…":(message||"Gemini is temporarily unavailable."));
+      if(!retried){
+       retried=true;
+       await AIStudyLab.sleep(1500);
+       continue;
+      }
       break;
      }
-     throw lastError;
+     if(status===404){
+      lastError=new Error("This Gemini model is unavailable for the current API project.");
+      break;
+     }
+     throw new Error(message||("Gemini request failed ("+status+")."));
     }catch(err){
      lastError=err;
-     if(err instanceof TypeError&&!attemptedRetry){
-      attemptedRetry=true;
+     if(err instanceof TypeError&&!retried){
+      retried=true;
       await AIStudyLab.sleep(1500);
       continue;
      }
