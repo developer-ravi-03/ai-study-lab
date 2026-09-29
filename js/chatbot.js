@@ -34,7 +34,7 @@ form.onsubmit = async e => {
   form.querySelector("button").disabled = true;
   setStatus("THINKING", "working");
 
-  const thinking = addMessage("ai", "Thinking through your question…");
+  const typing = document.createElement("div"); typing.className = "typing-row"; typing.innerHTML = '<span></span><span></span><span></span><em>AI is typing</em>'; chat.appendChild(typing); chat.scrollTop = chat.scrollHeight;
   thinking.classList.add("thinking");
 
   try {
