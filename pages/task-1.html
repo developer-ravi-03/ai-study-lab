@@ -1,1 +1,361 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="AI Resume Builder — generate a polished resume from structured profile details."><title>Task 1 — AI Resume Builder</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="../css/global.css"><link rel="stylesheet" href="../css/task.css"><style>.status{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:auto!important;min-width:92px!important;height:34px!important;min-height:34px!important;padding:0 12px!important;border-radius:8px!important;white-space:nowrap!important}.resume-form{display:grid;grid-template-columns:1fr 1fr;gap:14px}.resume-form .full{grid-column:1/-1}.resume-form label{margin-bottom:6px}.resume-form input,.resume-form textarea{min-height:auto;width:100%;border:1px solid #cfd6de;border-radius:9px;background:#fff;padding:12px 13px;outline:none;color:var(--ink)}.resume-form textarea{min-height:100px;resize:vertical}.resume-form input:focus,.resume-form textarea:focus{border-color:#c67a63;box-shadow:0 0 0 3px rgba(201,107,75,.11)}.form-actions{display:flex;gap:9px;margin-top:16px}.resume-preview{height:auto;min-height:540px;max-height:620px;background:#fff;border:1px solid #d8dee6;padding:34px 36px;color:#243244;overflow:auto}.resume-preview .empty{text-align:center;color:#87919d;padding-top:120px}.resume-preview h3{font-family:Georgia,serif;font-size:30px;margin:0 0 3px;color:#182536}.resume-preview .contact{font-size:12px;color:#687483;margin-bottom:22px}.resume-preview h4{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#a94f36;border-bottom:1px solid #e0e4e8;padding-bottom:5px;margin:20px 0 8px}.resume-preview p,.resume-preview li{font-size:13px;line-height:1.65;margin:0 0 5px}.resume-preview ul{margin:5px 0;padding-left:18px}.preview-actions{display:flex;gap:8px;margin-top:12px}.preview-actions button{display:none}.preview-actions button.show{display:inline-flex}@media(max-width:700px){.resume-form{grid-template-columns:1fr}.resume-form .full{grid-column:auto}}@media print{ @page{size:A4;margin:0} body{background:#fff!important} body *{visibility:hidden!important} .resume-preview,.resume-preview *{visibility:visible!important} .resume-preview{position:absolute!important;left:0!important;top:0!important;width:100%!important;min-height:0!important;height:auto!important;margin:0!important;border:0!important;box-shadow:none!important;padding:18mm 18mm 16mm!important;overflow:visible!important} .resume-preview h3{font-size:28px!important} .resume-preview h4{break-after:avoid!important} .resume-preview p,.resume-preview li{font-size:12px!important}.resume-preview{page-break-inside:auto!important} .resume-preview .contact{font-size:11px!important} }</style></head><body><header class="site-header"><a class="brand" href="../index.html"><span class="brand-mark">A</span> AI StudyLab</a><a class="back" href="../index.html">← All tasks</a></header><main class="task-shell wrap"><section class="task-hero"><div><p class="eyebrow">TASK 1 / 10</p><h1>AI Resume Builder</h1><p>Enter profile details and generate polished resume content. The brief requires name, contact, education, skills, experience and objective.</p></div><div class="meta"><span>HTML</span><span>CSS</span><span>JAVASCRIPT</span><span>AI</span></div></section><section class="workspace"><div class="panel"><div class="panel-head"><div><span class="label">PROFILE</span><h2>Your details</h2></div><span class="status" id="status">READY</span></div><form id="resumeForm" class="resume-form"><div><label for="name">Full name</label><input id="name" required placeholder="e.g. Ravi Kumar"></div><div><label for="contact">Contact</label><input id="contact" required placeholder="Email · phone · LinkedIn"></div><div class="full"><label for="education">Education</label><textarea id="education" required placeholder="Degree, college, year, relevant coursework..."></textarea></div><div class="full"><label for="skills">Skills</label><textarea id="skills" required placeholder="JavaScript, React, Java, SQL..."></textarea></div><div class="full"><label for="experience">Experience</label><textarea id="experience" placeholder="Internships, projects, roles, responsibilities..."></textarea></div><div class="full"><label for="objective">Career objective</label><textarea id="objective" placeholder="Your career objective or target role..."></textarea></div><div class="full form-actions"><button class="btn" type="submit">Generate Resume →</button><button class="quiet" type="button" id="reset">Reset</button></div></form><p class="helper">Local validation is active. Gemini generation will use these structured fields in the next API step.</p></div><div class="panel"><div class="panel-head"><div><span class="label">PREVIEW</span><h2>Resume</h2></div><span class="status" id="previewStatus">EMPTY</span></div><div id="preview" class="resume-preview"><div class="empty">Complete the profile form to create your resume preview.</div></div><div class="preview-actions"><button class="quiet" id="printBtn">Print / Save PDF</button></div></div></section></main><footer class="wrap footer"><span>AI StudyLab · Task 1</span><span>© 2026 Ravi</span></footer><script src="../js/gemini.js"></script><script src="../js/resume.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width,initial-scale=1">
+  <meta name="description"
+    content="AI Resume Builder — generate a polished resume from structured profile details.">
+  <title>Task 1 — AI Resume
+    Builder</title>
+  <link rel="preconnect"
+    href="https://fonts.googleapis.com">
+  <link rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet"
+    href="../css/global.css">
+  <link rel="stylesheet"
+    href="../css/task.css">
+  <style>
+    .status {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: auto !important;
+      min-width: 92px !important;
+      height: 34px !important;
+      min-height: 34px !important;
+      padding: 0 12px !important;
+      border-radius: 8px !important;
+      white-space: nowrap !important
+    }
+
+    .resume-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px
+    }
+
+    .resume-form .full {
+      grid-column: 1/-1
+    }
+
+    .resume-form label {
+      margin-bottom: 6px
+    }
+
+    .resume-form input,
+    .resume-form textarea {
+      min-height: auto;
+      width: 100%;
+      border: 1px solid #cfd6de;
+      border-radius: 9px;
+      background: #fff;
+      padding: 12px 13px;
+      outline: none;
+      color: var(--ink)
+    }
+
+    .resume-form textarea {
+      min-height: 100px;
+      resize: vertical
+    }
+
+    .resume-form input:focus,
+    .resume-form textarea:focus {
+      border-color: #c67a63;
+      box-shadow: 0 0 0 3px rgba(201, 107, 75, .11)
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 9px;
+      margin-top: 16px
+    }
+
+    .resume-preview {
+      height: auto;
+      min-height: 540px;
+      max-height: 620px;
+      background: #fff;
+      border: 1px solid #d8dee6;
+      padding: 34px 36px;
+      color: #243244;
+      overflow: auto
+    }
+
+    .resume-preview .empty {
+      text-align: center;
+      color: #87919d;
+      padding-top: 120px
+    }
+
+    .resume-preview h3 {
+      font-family: Georgia, serif;
+      font-size: 30px;
+      margin: 0 0 3px;
+      color: #182536
+    }
+
+    .resume-preview .contact {
+      font-size: 12px;
+      color: #687483;
+      margin-bottom: 22px
+    }
+
+    .resume-preview h4 {
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #a94f36;
+      border-bottom: 1px solid #e0e4e8;
+      padding-bottom: 5px;
+      margin: 20px 0 8px
+    }
+
+    .resume-preview p,
+    .resume-preview li {
+      font-size: 13px;
+      line-height: 1.65;
+      margin: 0 0 5px
+    }
+
+    .resume-preview ul {
+      margin: 5px 0;
+      padding-left: 18px
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px
+    }
+
+    .preview-actions button {
+      display: none
+    }
+
+    .preview-actions button.show {
+      display: inline-flex
+    }
+
+    @media(max-width:700px) {
+      .resume-form {
+        grid-template-columns: 1fr
+      }
+
+      .resume-form .full {
+        grid-column: auto
+      }
+    }
+
+    @media print {
+      @page {
+        size: A4;
+        margin: 0
+      }
+
+      body {
+        background: #fff !important
+      }
+
+      body * {
+        visibility: hidden !important
+      }
+
+      .resume-preview,
+      .resume-preview * {
+        visibility: visible !important
+      }
+
+      .resume-preview {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        min-height: 0 !important;
+        height: auto !important;
+        margin: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 18mm 18mm 16mm !important;
+        overflow: visible !important
+      }
+
+      .resume-preview h3 {
+        font-size: 28px !important
+      }
+
+      .resume-preview h4 {
+        break-after: avoid !important
+      }
+
+      .resume-preview p,
+      .resume-preview li {
+        font-size: 12px !important
+      }
+
+      .resume-preview {
+        page-break-inside: auto !important
+      }
+
+      .resume-preview .contact {
+        font-size: 11px !important
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <a class="brand"
+      href="../index.html"><span
+        class="brand-mark">A</span>
+      AI StudyLab</a><a
+      class="back"
+      href="../index.html">←
+      All tasks</a>
+  </header>
+  <main
+    class="task-shell wrap">
+    <section
+      class="task-hero">
+      <div>
+        <p class="eyebrow">
+          TASK 1 / 10</p>
+        <h1>AI Resume Builder
+        </h1>
+        <p>Enter profile
+          details and generate
+          polished resume
+          content. The brief
+          requires name,
+          contact, education,
+          skills, experience
+          and objective.</p>
+      </div>
+      <div class="meta">
+        <span>HTML</span><span>CSS</span><span>JAVASCRIPT</span><span>AI</span>
+      </div>
+    </section>
+    <section
+      class="workspace">
+      <div class="panel">
+        <div
+          class="panel-head">
+          <div><span
+              class="label">PROFILE</span>
+            <h2>Your details
+            </h2>
+          </div><span
+            class="status"
+            id="status">READY</span>
+        </div>
+        <form id="resumeForm"
+          class="resume-form">
+          <div><label
+              for="name">Full
+              name</label><input
+              id="name"
+              required
+              placeholder="e.g. Ravi Kumar">
+          </div>
+          <div><label
+              for="contact">Contact</label><input
+              id="contact"
+              required
+              placeholder="Email · phone · LinkedIn">
+          </div>
+          <div class="full">
+            <label
+              for="education">Education</label><textarea
+              id="education"
+              required
+              placeholder="Degree, college, year, relevant coursework..."></textarea>
+          </div>
+          <div class="full">
+            <label
+              for="skills">Skills</label><textarea
+              id="skills"
+              required
+              placeholder="JavaScript, React, Java, SQL..."></textarea>
+          </div>
+          <div class="full">
+            <label
+              for="experience">Experience</label><textarea
+              id="experience"
+              placeholder="Internships, projects, roles, responsibilities..."></textarea>
+          </div>
+          <div class="full">
+            <label
+              for="objective">Career
+              objective</label><textarea
+              id="objective"
+              placeholder="Your career objective or target role..."></textarea>
+          </div>
+          <div
+            class="full form-actions">
+            <button
+              class="btn"
+              type="submit">Generate
+              Resume
+              →</button><button
+              class="quiet"
+              type="button"
+              id="reset">Reset</button>
+          </div>
+        </form>
+        <p class="helper">
+          Local validation is
+          active. Gemini
+          generation will use
+          these structured
+          fields in the next
+          API step.</p>
+      </div>
+      <div class="panel">
+        <div
+          class="panel-head">
+          <div><span
+              class="label">PREVIEW</span>
+            <h2>Resume</h2>
+          </div><span
+            class="status"
+            id="previewStatus">EMPTY</span>
+        </div>
+        <div id="preview"
+          class="resume-preview">
+          <div class="empty">
+            Complete the
+            profile form to
+            create your resume
+            preview.</div>
+        </div>
+        <div
+          class="preview-actions">
+          <button
+            class="quiet"
+            id="printBtn">Print
+            / Save
+            PDF</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="wrap footer">
+    <span>AI StudyLab · Task
+      1</span><span>© 2026
+      Ravi</span>
+  </footer>
+  <script
+    src="../js/gemini.js"></script>
+  <script
+    src="../js/resume.js"></script>
+</body>
+
+</html>

@@ -1,57 +1,182 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Task 5 — Google Sheets Backend</title>
-<link rel="stylesheet" href="../css/global.css">
-<link rel="stylesheet" href="../css/task.css">
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width,initial-scale=1">
+  <title>Task 5 — Google
+    Sheets Backend</title>
+  <link rel="stylesheet"
+    href="../css/global.css">
+  <link rel="stylesheet"
+    href="../css/task.css">
 </head>
+
 <body>
-<header class="site-header">
-<a class="brand" href="../index.html"><span class="brand-mark">A</span> AI StudyLab</a>
-<a class="back" href="../index.html">← All tasks</a>
-</header>
-<main class="task-shell wrap">
-<section class="task-hero">
-<div><p class="eyebrow">TASK 5 / 10</p><h1>Google Sheets Backend</h1><p>Use Google Sheets as a live database and connect it to a dynamic frontend through Google Apps Script.</p></div>
-<div class="meta"><span>GOOGLE SHEETS</span><span>APPS SCRIPT</span><span>FETCH API</span></div>
-</section>
+  <header class="site-header">
+    <a class="brand"
+      href="../index.html"><span
+        class="brand-mark">A</span>
+      AI StudyLab</a>
+    <a class="back"
+      href="../index.html">←
+      All tasks</a>
+  </header>
+  <main
+    class="task-shell wrap">
+    <section
+      class="task-hero">
+      <div>
+        <p class="eyebrow">
+          TASK 5 / 10</p>
+        <h1>Google Sheets
+          Backend</h1>
+        <p>Use Google Sheets
+          as a live database
+          and connect it to a
+          dynamic frontend
+          through Google Apps
+          Script.</p>
+      </div>
+      <div class="meta">
+        <span>GOOGLE
+          SHEETS</span><span>APPS
+          SCRIPT</span><span>FETCH
+          API</span></div>
+    </section>
 
-<section class="workspace">
-<div class="panel">
-<div class="panel-head"><div><span class="label">CONNECTION</span><h2>Sheet endpoint</h2></div><span class="status" id="status" data-state="ready">READY</span></div>
-<label for="endpoint">Apps Script Web App URL</label>
-<input id="endpoint" autocomplete="url" placeholder="https://script.google.com/macros/s/.../exec">
-<div class="actions"><button class="btn" id="load" type="button">Load Data →</button></div>
+    <section
+      class="workspace">
+      <div class="panel">
+        <div
+          class="panel-head">
+          <div><span
+              class="label">CONNECTION</span>
+            <h2>Sheet endpoint
+            </h2>
+          </div><span
+            class="status"
+            id="status"
+            data-state="ready">READY</span>
+        </div>
+        <label
+          for="endpoint">Apps
+          Script Web App
+          URL</label>
+        <input id="endpoint"
+          autocomplete="url"
+          placeholder="https://script.google.com/macros/s/.../exec">
+        <div class="actions">
+          <button class="btn"
+            id="load"
+            type="button">Load
+            Data →</button>
+        </div>
 
-<div class="sheet-form-section">
-<span class="label">ADD RECORD</span>
-<h3>Student data</h3>
-<div class="form-grid">
-<div><label for="name">Name</label><input id="name" placeholder="Ravi Kumar"></div>
-<div><label for="subject">Subject</label><input id="subject" placeholder="Java"></div>
-<div><label for="marks">Marks</label><input id="marks" type="number" min="0" max="100" placeholder="85"></div>
-<div><label for="attendance">Attendance</label><input id="attendance" type="number" min="0" max="100" placeholder="92"></div>
-</div>
-<button class="quiet" id="append" type="button">Add Record</button>
-<p class="helper">The form sends a JSON object to Apps Script, which appends it as a new Sheet row.</p>
-</div>
-</div>
+        <div
+          class="sheet-form-section">
+          <span
+            class="label">ADD
+            RECORD</span>
+          <h3>Student data
+          </h3>
+          <div
+            class="form-grid">
+            <div><label
+                for="name">Name</label><input
+                id="name"
+                placeholder="Ravi Kumar">
+            </div>
+            <div><label
+                for="subject">Subject</label><input
+                id="subject"
+                placeholder="Java">
+            </div>
+            <div><label
+                for="marks">Marks</label><input
+                id="marks"
+                type="number"
+                min="0"
+                max="100"
+                placeholder="85">
+            </div>
+            <div><label
+                for="attendance">Attendance</label><input
+                id="attendance"
+                type="number"
+                min="0"
+                max="100"
+                placeholder="92">
+            </div>
+          </div>
+          <button
+            class="quiet"
+            id="append"
+            type="button">Add
+            Record</button>
+          <p class="helper">
+            The form sends a
+            JSON object to
+            Apps Script, which
+            appends it as a
+            new Sheet row.</p>
+        </div>
+      </div>
 
-<div class="panel">
-<div class="panel-head"><div><span class="label">LIVE DATA</span><h2>Sheet rows</h2></div><span class="record-count" id="recordCount">0 records</span></div>
-<div id="output" class="result"><div class="empty-state"><strong>Connect your sheet endpoint.</strong><span>Load the data to view live rows here.</span></div></div>
-<div class="sheet-insights" id="insights" hidden>
-<div><span>Records</span><strong id="statRecords">0</strong></div>
-<div><span>Average marks</span><strong id="statMarks">—</strong></div>
-<div><span>Attendance</span><strong id="statAttendance">—</strong></div>
-</div>
-</div>
-</section>
-</main>
-<footer class="wrap footer"><span>AI StudyLab · Task 5</span><span>© 2026 Ravi</span></footer>
-<script src="../js/gemini.js"></script>
-<script src="../js/sheets.js"></script>
+      <div class="panel">
+        <div
+          class="panel-head">
+          <div><span
+              class="label">LIVE
+              DATA</span>
+            <h2>Sheet rows
+            </h2>
+          </div><span
+            class="record-count"
+            id="recordCount">0
+            records</span>
+        </div>
+        <div id="output"
+          class="result">
+          <div
+            class="empty-state">
+            <strong>Connect
+              your sheet
+              endpoint.</strong><span>Load
+              the data to view
+              live rows
+              here.</span>
+          </div>
+        </div>
+        <div
+          class="sheet-insights"
+          id="insights"
+          hidden>
+          <div>
+            <span>Records</span><strong
+              id="statRecords">0</strong>
+          </div>
+          <div><span>Average
+              marks</span><strong
+              id="statMarks">—</strong>
+          </div>
+          <div>
+            <span>Attendance</span><strong
+              id="statAttendance">—</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="wrap footer">
+    <span>AI StudyLab · Task
+      5</span><span>© 2026
+      Ravi</span></footer>
+  <script
+    src="../js/gemini.js"></script>
+  <script
+    src="../js/sheets.js"></script>
 </body>
+
 </html>

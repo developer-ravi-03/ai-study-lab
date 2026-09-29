@@ -1,1 +1,43 @@
-const file=document.querySelector("#image"),img=document.querySelector("#previewImage"),text=document.querySelector("#ocrText"),status=document.querySelector("#status"),out=document.querySelector("#output");file.onchange=async()=>{const f=file.files[0];if(!f)return;img.src=URL.createObjectURL(f);img.hidden=false;status.textContent="OCR WORKING";try{const r=await Tesseract.recognize(f,"eng");text.value=r.data.text;status.textContent="OCR READY"}catch(e){status.textContent="ERROR";out.innerHTML="<p class=error>"+AIStudyLab.escapeHtml(e.message)+"</p>"}};document.querySelector("#summarize").onclick=async()=>{if(!text.value.trim()){status.textContent="INPUT NEEDED";return}status.textContent="SUMMARIZING";try{const answer=await AIStudyLab.generate("Summarize these corrected OCR notes into concise key points with headings and important terms. Do not add facts not present in the notes. Notes:\n"+text.value);out.innerHTML="<div class=rich-text>"+AIStudyLab.escapeHtml(answer).replace(/\n/g,"<br>")+"</div>";status.textContent="READY"}catch(e){status.textContent="ERROR";out.innerHTML="<p class=error>"+AIStudyLab.escapeHtml(e.message)+"</p>"}};
+const file = document.querySelector("#image"),
+  img = document.querySelector("#previewImage"),
+  text = document.querySelector("#ocrText"),
+  status = document.querySelector("#status"),
+  out = document.querySelector("#output");
+file.onchange = async () => {
+  const f = file.files[0];
+  if (!f) return;
+  img.src = URL.createObjectURL(f);
+  img.hidden = false;
+  status.textContent = "OCR WORKING";
+  try {
+    const r = await Tesseract.recognize(f, "eng");
+    text.value = r.data.text;
+    status.textContent = "OCR READY";
+  } catch (e) {
+    status.textContent = "ERROR";
+    out.innerHTML =
+      "<p class=error>" + AIStudyLab.escapeHtml(e.message) + "</p>";
+  }
+};
+document.querySelector("#summarize").onclick = async () => {
+  if (!text.value.trim()) {
+    status.textContent = "INPUT NEEDED";
+    return;
+  }
+  status.textContent = "SUMMARIZING";
+  try {
+    const answer = await AIStudyLab.generate(
+      "Summarize these corrected OCR notes into concise key points with headings and important terms. Do not add facts not present in the notes. Notes:\n" +
+        text.value,
+    );
+    out.innerHTML =
+      "<div class=rich-text>" +
+      AIStudyLab.escapeHtml(answer).replace(/\n/g, "<br>") +
+      "</div>";
+    status.textContent = "READY";
+  } catch (e) {
+    status.textContent = "ERROR";
+    out.innerHTML =
+      "<p class=error>" + AIStudyLab.escapeHtml(e.message) + "</p>";
+  }
+};
