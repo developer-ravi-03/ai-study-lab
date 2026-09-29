@@ -8,7 +8,7 @@ AIStudyLab.escapeHtml=v=>{const d=document.createElement("div");d.textContent=St
 AIStudyLab.sleep=ms=>new Promise(r=>setTimeout(r,ms));
 AIStudyLab.setLoading=on=>{let el=document.querySelector("#aiLoading");if(on){if(!el){el=document.createElement("div");el.id="aiLoading";el.innerHTML='<div class="ai-loader-card"><div class="ai-spinner"></div><strong>AI is working</strong><span>Generating your result…</span></div>';document.body.appendChild(el)}el.classList.add("show");document.body.setAttribute("aria-busy","true")}else{if(el)el.classList.remove("show");document.body.removeAttribute("aria-busy")}};
 
-AIStudyLab.generate=async(prompt,{json=false,loading=true}={)=>{
+AIStudyLab.generate=async(prompt,{json=false,loading=true}={})=>{
  const key=AIStudyLab.getApiKey();
  if(!key) throw new Error("Add your Gemini API key from AI Settings first.");
  const body={contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.35,maxOutputTokens:5000}};
