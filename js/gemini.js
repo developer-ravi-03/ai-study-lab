@@ -1,4 +1,4 @@
-const GEMINI_MODELS=["gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-2.5-flash-lite"];
+const GEMINI_MODELS=["gemini-3-flash-preview","gemini-3.5-flash-lite","gemini-3.1-flash-lite"];
 const GEMINI_BASE="https://generativelanguage.googleapis.com/v1beta/models/";
 window.AIStudyLab=window.AIStudyLab||{};
 AIStudyLab.getApiKey=()=>sessionStorage.getItem("gemini_api_key")||"";
