@@ -1,4 +1,4 @@
-const AI_API_BASE = window.AI_STUDYLAB_API_BASE || "https://REPLACE-WITH-YOUR-VERCEL-URL.vercel.app/api";
+const AI_API_BASE = window.AI_STUDYLAB_API_BASE || "https://ai-study-lab-wine.vercel.app/api";
 window.AIStudyLab = window.AIStudyLab || {};
 
 AIStudyLab.escapeHtml = v => {
