@@ -1,1 +1,38 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Task 7 — Subject Doubt Chatbot</title><link rel="stylesheet" href="../css/global.css"><link rel="stylesheet" href="../css/task.css"><style>.chat{height:430px;overflow:auto;border:1px solid var(--line);border-radius:9px;padding:15px;background:#f9fafb}.msg{max-width:82%;padding:10px 12px;border-radius:10px;margin:8px 0;font-size:13px}.user{margin-left:auto;background:var(--ink);color:#fff}.ai{background:#fff;border:1px solid var(--line)}.chat-form{display:flex;gap:8px;margin-top:10px}.chat-form input{flex:1;border:1px solid var(--line);border-radius:8px;padding:12px}</style></head><body><header class="site-header"><a class="brand" href="../index.html"><span class="brand-mark">A</span> AI StudyLab</a><a class="back" href="../index.html">← All tasks</a></header><main class="task-shell wrap"><section class="task-hero"><div><p class="eyebrow">TASK 7 / 10</p><h1>Subject Doubt Chatbot</h1><p>Ask questions and continue the conversation with context-aware Gemini responses.</p></div><div class="meta"><span>GEMINI</span><span>CHAT</span><span>CONTEXT</span></div></section><section class="workspace"><div class="panel"><div class="panel-head"><div><span class="label">TUTOR</span><h2>Ask your doubt</h2></div><span class="status" id="status">READY</span></div><div id="chat" class="chat"><div class="msg ai">Hello! Tell me the subject and your doubt.</div></div><form id="chatForm" class="chat-form"><input id="question" required placeholder="Explain JavaScript closures simply"><button class="btn">Send</button></form><button class="quiet" id="clearChat" type="button" style="margin-top:10px">Clear chat</button></div><div class="panel"><div class="panel-head"><div><span class="label">SESSION</span><h2>Conversation</h2></div></div><p class="helper">The recent conversation is included in each Gemini request for follow-up context.</p></div></section></main><footer class="wrap footer"><span>AI StudyLab · Task 7</span><span>© 2026 Ravi</span></footer><script src="../js/gemini.js"></script><script src="../js/chatbot.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Task 7 — Subject Doubt Chatbot</title>
+<link rel="stylesheet" href="../css/global.css"><link rel="stylesheet" href="../css/task.css">
+</head>
+<body>
+<header class="site-header"><a class="brand" href="../index.html"><span class="brand-mark">A</span> AI StudyLab</a><a class="back" href="../index.html">← All tasks</a></header>
+<main class="task-shell wrap">
+<section class="task-hero"><div><p class="eyebrow">TASK 7 / 10</p><h1>Subject Doubt Chatbot</h1><p>A focused AI tutor for subject questions, follow-up doubts, and step-by-step explanations.</p></div><div class="meta"><span>GEMINI</span><span>TUTOR</span><span>CONTEXT</span></div></section>
+<section class="workspace chatbot-workspace">
+<div class="panel chat-panel">
+<div class="panel-head"><div><span class="label">AI TUTOR</span><h2>Ask your doubt</h2></div><span class="status" id="status" data-state="ready">READY</span></div>
+<div class="chat-toolbar"><span id="topicLabel">General study mode</span><button class="quiet" id="clearChat" type="button">Clear</button></div>
+<div id="chat" class="chat" aria-live="polite">
+<div class="msg ai"><div class="msg-role">AI TUTOR</div><div>Hello! Tell me the subject and your doubt. I can explain concepts step by step and answer follow-up questions using the conversation context.</div></div>
+</div>
+<form id="chatForm" class="chat-form">
+<input id="question" required autocomplete="off" placeholder="e.g. Explain JavaScript closures with an example">
+<button class="btn" type="submit">Send</button>
+</form>
+<p class="helper">Tip: Ask a follow-up such as “why does this happen?” and the tutor will use recent conversation context.</p>
+</div>
+<div class="panel">
+<div class="panel-head"><div><span class="label">SESSION GUIDE</span><h2>Study with context</h2></div></div>
+<div class="tutor-guide">
+<div><strong>01</strong><h3>Ask</h3><p>Start with any subject question.</p></div>
+<div><strong>02</strong><h3>Explore</h3><p>Ask follow-ups without repeating the full context.</p></div>
+<div><strong>03</strong><h3>Clarify</h3><p>Request examples, simpler explanations, or step-by-step reasoning.</p></div>
+</div>
+<div class="session-note"><span class="label">CONTEXT WINDOW</span><p>The latest conversation turns are included with each Gemini request so follow-up questions stay connected.</p></div>
+</div>
+</section>
+</main>
+<footer class="wrap footer"><span>AI StudyLab · Task 7</span><span>© 2026 Ravi</span></footer>
+<script src="../js/gemini.js"></script><script src="../js/chatbot.js"></script>
+</body></html>
