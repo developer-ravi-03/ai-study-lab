@@ -95,7 +95,9 @@ function renderJson(id, data) {
       <div class="actions result-actions">
         <button class="quiet" id="prevSlide" type="button">← Previous</button>
         <button class="quiet" id="nextSlide" type="button">Next →</button>
-        <button class="quiet" id="printSlides" type="button">Print Slides</button>
+        <button class="quiet" id="printSlides" type="button">Print</button>
+        <button class="quiet export-btn" id="downloadPptx" type="button">Download PPTX</button>
+        <button class="quiet export-btn" id="downloadPresentationPdf" type="button">Download PDF</button>
       </div>`;
   }
 
@@ -170,11 +172,102 @@ function drawSlide() {
   }
 
   stage.innerHTML = `
-    <article class="result-card slide-card">
-      <div class="slide-label">SLIDE ${slideIndex + 1} / ${currentSlides.length}</div>
-      <h3>${esc(slide.title || "")}</h3>
-      <ul>${(slide.points || []).map(point => `<li>${esc(point)}</li>`).join("")}</ul>
+    <article class="ppt-slide-preview">
+      <div class="ppt-topline"><span>AI STUDYLAB</span><span>0${slideIndex + 1}</span></div>
+      <div class="ppt-content">
+        <div class="slide-label">SLIDE ${slideIndex + 1} / ${currentSlides.length}</div>
+        <h3>${esc(slide.title || "")}</h3>
+        <ul>${(slide.points || []).map(point => `<li>${esc(point)}</li>`).join("")}</ul>
+      </div>
+      <div class="ppt-footer"><span>AI Presentation Generator</span><span>Ravi</span></div>
     </article>`;
+}
+
+function downloadPresentationPdf() {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert("PDF export is still loading. Please try again.");
+    return;
+  }
+
+  const doc = new window.jspdf.jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  currentSlides.forEach((slide, index) => {
+    if (index > 0) doc.addPage("a4", "landscape");
+    doc.setFillColor(24, 37, 54);
+    doc.rect(0, 0, 297, 210, "F");
+    doc.setTextColor(201, 107, 75);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("AI STUDYLAB", 18, 18);
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(27);
+    doc.text(String(slide.title || "Presentation"), 18, 55, { maxWidth: 245 });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(14);
+    let y = 82;
+    (slide.points || []).forEach(point => {
+      const lines = doc.splitTextToSize(String(point), 230);
+      doc.text("•", 20, y);
+      doc.text(lines, 29, y);
+      y += Math.max(9, lines.length * 7 + 3);
+    });
+    doc.setTextColor(190, 198, 207);
+    doc.setFontSize(9);
+    doc.text(`AI Presentation Generator  •  ${index + 1} / ${currentSlides.length}`, 18, 198);
+  });
+  doc.save("AI-StudyLab-Presentation.pdf");
+}
+
+async function downloadPresentationPptx() {
+  if (!window.PptxGenJS) {
+    alert("PowerPoint export is still loading. Please try again.");
+    return;
+  }
+
+  const pptx = new window.PptxGenJS();
+  pptx.layout = "LAYOUT_WIDE";
+  pptx.author = "Ravi";
+  pptx.subject = "AI StudyLab Presentation";
+  pptx.title = currentSlides[0]?.title || "AI StudyLab Presentation";
+  pptx.company = "AI StudyLab";
+  pptx.lang = "en-US";
+
+  currentSlides.forEach((slide, index) => {
+    const page = pptx.addSlide();
+    page.background = { color: "182536" };
+    page.addText("AI STUDYLAB", {
+      x: 0.55, y: 0.35, w: 2.2, h: 0.25,
+      fontFace: "Aptos", fontSize: 9, bold: true, color: "C96B4B",
+      charSpacing: 1.4, margin: 0
+    });
+    page.addText(String(slide.title || "Presentation"), {
+      x: 0.65, y: 1.25, w: 11.2, h: 0.75,
+      fontFace: "Aptos Display", fontSize: 27, bold: true,
+      color: "FFFFFF", margin: 0
+    });
+    page.addShape(pptx.ShapeType.line, {
+      x: 0.65, y: 2.18, w: 1.0, h: 0,
+      line: { color: "C96B4B", width: 2.5 }
+    });
+
+    const points = (slide.points || []).map(point => ({
+      text: String(point),
+      options: { bullet: { indent: 16 }, hanging: 4, breakLine: true }
+    }));
+
+    page.addText(points, {
+      x: 0.85, y: 2.55, w: 10.8, h: 3.65,
+      fontFace: "Aptos", fontSize: 18, color: "E9EDF2",
+      breakLine: false, paraSpaceAfterPt: 14,
+      margin: 0.02, valign: "mid", fit: "shrink"
+    });
+    page.addText(`AI Presentation Generator    ${String(index + 1).padStart(2, "0")} / ${String(currentSlides.length).padStart(2, "0")}`, {
+      x: 0.65, y: 7.0, w: 11.7, h: 0.25,
+      fontFace: "Aptos", fontSize: 8, color: "AEB8C4", margin: 0,
+      align: "right"
+    });
+  });
+
+  await pptx.writeFile({ fileName: "AI-StudyLab-Presentation.pptx" });
 }
 
 function addNotesPdf(raw) {
@@ -300,6 +393,8 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         };
         document.querySelector("#printSlides").onclick = () => window.print();
+        document.querySelector("#downloadPptx").onclick = () => downloadPresentationPptx();
+        document.querySelector("#downloadPresentationPdf").onclick = () => downloadPresentationPdf();
       }
     } catch (error) {
       setStatus(status, "ERROR");
